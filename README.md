@@ -10,15 +10,6 @@ immutable Spore DOB + live DobEvolutionStateV1 + decoder = current render state
 
 The base DOB remains stable. Evolution happens through a typed successor state Cell with explicit actions, fixtures, schemas, and proof evidence.
 
-## Why You Might Use This
-
-Use DOB-EVO if you are building or reviewing:
-
-- dynamic DOB art or metadata that should keep a stable immutable origin;
-- CKB state lines where every evolution step needs a typed proof surface;
-- CellScript package registry flows with production-style verification gates;
-- audit material for DOB evolution, finalisation, replay prevention, and owner-lock preservation.
-
 This repository is standalone. It is also consumed by the main CellScript compiler repository as a submodule at:
 
 ```text
