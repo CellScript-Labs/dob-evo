@@ -1,33 +1,47 @@
-# DOB-EVO/1 Evolving DOB Profile
+# DOB-EVO
 
-**Status**: production-ready source package. It uses the NovaSeal package tree
-shape, but the protocol is DOB-specific and does not depend on NovaSeal.
+DOB-EVO is a production-oriented CellScript profile for evolving Digital Object state on CKB without mutating the original Spore DOB Cell.
 
-DOB-EVO/1 implements dynamic DOB state as a typed CKB state line:
+The core idea is simple:
 
 ```text
 immutable Spore DOB + live DobEvolutionStateV1 + decoder = current render state
 ```
 
-It deliberately does not mutate the public Spore DOB Cell and does not support
-older evolving-DOB encodings.
+The base DOB remains stable. Evolution happens through a typed successor state Cell with explicit actions, fixtures, schemas, and proof evidence.
 
-## Contents
+## Why You Might Use This
+
+Use DOB-EVO if you are building or reviewing:
+
+- dynamic DOB art or metadata that should keep a stable immutable origin;
+- CKB state lines where every evolution step needs a typed proof surface;
+- CellScript package registry flows with production-style verification gates;
+- audit material for DOB evolution, finalisation, replay prevention, and owner-lock preservation.
+
+This repository is standalone. It is also consumed by the main CellScript compiler repository as a submodule at:
+
+```text
+proposals/evolving-dob/evolving-dob-profile-v1
+```
+
+## What Is Included
 
 | Path | Purpose |
 | --- | --- |
-| `src/evolving_dob_type.cell` | Production CellScript state, event, and action surface. |
-| `schemas/` | Source-of-truth state, intent, and event layout notes. |
-| `fixtures/` | Positive and negative fixture labels for builder and CKB VM harnesses. |
-| `proofs/` | Invariant matrix and ProofPlan mapping. |
-| `docs/` | Profile, security, production gate, and registry pressure notes. |
-| `scripts/evolving_dob_registry_pressure.py` | Local package/registry pressure gate. |
-| `scripts/evolving_dob_devnet_workflow.py` | Local CKB devnet deployment, live registry, action-plan, and builder gate. |
+| `src/evolving_dob_type.cell` | The CellScript source for initialise, evolve, and finalise actions. |
+| `schemas/` | State, intent, and event layout notes. |
+| `fixtures/` | Positive and negative scenario labels for builders and VM harnesses. |
+| `proofs/` | Invariant matrix and proof-plan material. |
+| `docs/` | Profile, security, production-readiness, and registry-pressure notes. |
+| `scripts/evolving_dob_registry_pressure.py` | Local package and registry pressure check. |
+| `scripts/evolving_dob_devnet_workflow.py` | Local CKB devnet workflow for deployment and live registry evidence. |
 
-## Required Local Gate
+## Quick Start
+
+Install or build `cellc`, then run the local package checks:
 
 ```bash
-cd proposals/evolving-dob/evolving-dob-profile-v1
 cellc build --release --target riscv64-elf --target-profile ckb
 cellc check --target-profile ckb --primitive-strict 0.16
 cellc package verify --json
@@ -35,24 +49,27 @@ cellc publish --dry-run
 python3 scripts/evolving_dob_registry_pressure.py
 ```
 
-The strict promotion probe must pass without `PP0150`, fail-closed verifier
-features, or runtime-required ProofPlan obligations.
+These commands are intended to prove that the source package is internally coherent before you wire it into a registry or deployment process.
 
-## Strict Local Devnet Workflow
+## Local Devnet Evidence
 
-With a CKB checkout or `CKB_BIN` available, run:
+If you have a CKB checkout or `CKB_BIN` available, run:
 
 ```bash
 python3 scripts/evolving_dob_devnet_workflow.py --pretty
 ```
 
-This starts a local integration node, deploys `build/evolving_dob_type.elf` as
-a live code cell, writes `Deployed.toml`, bridges the deployment into
-`Cell.lock`, runs strict registry verification including `--live`, emits all
-three action build plans, generates the TypeScript builder with deployment
-identity, and runs the generated builder's `npm test` suite. The local workflow
-does not claim a cryptographic publisher signature; that is reserved for public
-registry promotion.
+That workflow starts a local integration node, deploys the built type script as a live code Cell, writes deployment metadata, verifies the registry identity including `--live`, emits action build plans, generates the TypeScript builder, and runs the generated builder tests.
 
-This is real local-node workflow evidence. It is not a claim that the package
-has been deployed to public Aggron/mainnet infrastructure.
+This is local-node evidence. It is not a claim that the package has already been deployed to public Aggron or mainnet infrastructure.
+
+## Production Boundary
+
+DOB-EVO/1 intentionally does not support legacy evolving-DOB encodings. It is scoped to the `DobEvolutionStateV1` model and the invariants documented under `docs/` and `proofs/`.
+
+Start with:
+
+- `docs/PROFILE.md`
+- `docs/PRODUCTION_READINESS.md`
+- `docs/SECURITY.md`
+- `proofs/invariant_matrix.json`
