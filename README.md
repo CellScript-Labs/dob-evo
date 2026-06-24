@@ -16,6 +16,18 @@ This repository is standalone. It is also consumed by the main CellScript compil
 proposals/evolving-dob/evolving-dob-profile-v1
 ```
 
+## How The Profile Works
+
+DOB-EVO separates identity from change. The Spore DOB stays the canonical object, while `DobEvolutionStateV1` records the live evolution line for that object. Renderers combine the immutable DOB, the latest live evolution state, and the committed decoder to produce the current view.
+
+The CellScript profile enforces this as a state machine:
+
+- `initialise_dob_state` starts the state line for one Spore/Cluster identity.
+- `evolve_dob_state` replaces the live state with generation `+1` and a new event commitment.
+- `finalise_dob_state` closes the line so later evolution is rejected.
+
+The important invariant is continuity. The profile preserves identity fields, advances generation monotonically, binds each accepted action into `DobEvolutionEventV1`, and rejects stale state, replayed generations, legacy encodings, and mismatched rule or decoder commitments.
+
 ## What Is Included
 
 | Path | Purpose |
