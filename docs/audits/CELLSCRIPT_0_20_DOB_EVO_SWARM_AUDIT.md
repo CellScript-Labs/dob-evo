@@ -62,20 +62,20 @@ after re-checking `ROOT.parents[2]` on disk, and the pressure script's
 | # | Severity | Area | File:Line | Summary |
 |---|---|---|---|---|
 | 1 | HIGH | Security | `src/evolving_dob_type.cell:82-156` | **Resolved** — genesis now calls the checked CKB helper `ckb::require_cell_lock_hash(source::input(0), intent.owner_lock)`, avoiding the rejected raw fixed-byte equality obligation. |
-| 2 | ~~HIGH~~ (see corrected note) | Tools | `scripts/evolving_dob_registry_pressure.py:18`, `scripts/evolving_dob_devnet_workflow.py:30` | `REPO_ROOT = ROOT.parents[2]` is **correct**. Original audit miscounted path levels. |
+| 2 | ~~HIGH~~ (see corrected note) | Tools | `tools/src/main.rs:18`, `tools/src/devnet.rs:30` | `REPO_ROOT = ROOT.parents[2]` is **correct**. Original audit miscounted path levels. |
 | 3 | MED | Coverage | `fixtures/*.json` | ~34 of 50 source guards have no negative fixture. |
-| 4 | MED | Schema | `Cell.toml:13`, `scripts/evolving_dob_registry_pressure.py` | **Resolved** — `cellscript_version` is aligned with `compiler_version = "0.17.0"`, and the pressure gate now checks manifest/lock version equality. |
+| 4 | MED | Schema | `Cell.toml:13`, `tools/src/main.rs` | **Resolved** — `cellscript_version` is aligned with `compiler_version = "0.17.0"`, and the pressure gate now checks manifest/lock version equality. |
 | 5 | MED | Security | `src/evolving_dob_type.cell:162-163,241-242` | **Resolved** — `evolve` and `finalise` now reject zero `old_state.spore_id` and `old_state.cluster_id` before preserving identity. |
-| 6 | MED | Tools | `Deployed.toml`, `scripts/evolving_dob_devnet_workflow.py` | **Resolved for local devnet** — the fabricated `publisher_signature` was removed and local registry verification no longer requires it. Public registry promotion still requires a real signature. |
+| 6 | MED | Tools | `Deployed.toml`, `tools/src/devnet.rs` | **Resolved for local devnet** — the fabricated `publisher_signature` was removed and local registry verification no longer requires it. Public registry promotion still requires a real signature. |
 | 7 | LOW | Surface | `src/evolving_dob_type.cell:38` | **Resolved** — `burn` and `relock` capabilities were removed from `DobEvolutionStateV1`. |
 | 8 | LOW | Coverage | `proofs/invariant_matrix.json` | Invariants lack `file:line` and `fixtures:` references; coverage is structurally invisible. |
 | 9 | LOW | Schema | `Cell.lock:21` vs `Deployed.toml:2` | Deployment-record schema shape diverges (`v0.19` array vs lockfile `version = 1` flat). |
 | 10 | LOW | Tools | `registry.json:15` | `released_at` is hardcoded — not regenerated on rebuild. |
 | 11 | LOW | Robustness | `src/evolving_dob_type.cell:107,188,269` | Action salt strings use zero-padding to a fixed 32-byte length — fragile under future edits. |
 | 12 | LOW | Docs | `src/evolving_dob_type.cell:10,77-80` | `PHASE_UNBORN` and `Unborn -> Active` flow edge describe a phase that never persists on a state cell. |
-| 13 | LOW | Tools | `scripts/evolving_dob_registry_pressure.py:28` | **Resolved** — `cargo run` fallback now passes `--bin cellc`, matching the devnet workflow intent. |
-| 14 | LOW | Tools | `scripts/evolving_dob_devnet_workflow.py` | **Resolved** — the CKB child starts in a new session, so `--keep-node` is not tied to the parent shell process group. |
-| 15 | LOW | Tools | `scripts/evolving_dob_devnet_workflow.py` | **Resolved** — `ckb.log` is opened unbuffered in binary mode and the child no longer uses text-mode buffering. |
+| 13 | LOW | Tools | `tools/src/main.rs:28` | **Resolved** — `cargo run` fallback now passes `--bin cellc`, matching the devnet workflow intent. |
+| 14 | LOW | Tools | `tools/src/devnet.rs` | **Resolved** — the CKB child starts in a new session, so `--keep-node` is not tied to the parent shell process group. |
+| 15 | LOW | Tools | `tools/src/devnet.rs` | **Resolved** — `ckb.log` is opened unbuffered in binary mode and the child no longer uses text-mode buffering. |
 | 16 | LOW | Schema | `Deployed.toml:26` | `hash_type = "data1"` not pinned to a minimum CKB version. |
 
 ---
@@ -121,8 +121,8 @@ declared owner lock.
 ## 2. ~~HIGH — Both scripts resolve `REPO_ROOT` to the wrong directory~~ — RETRACTED
 
 **Files**:
-- `scripts/evolving_dob_registry_pressure.py:18`
-- `scripts/evolving_dob_devnet_workflow.py:30`
+- `tools/src/main.rs:18`
+- `tools/src/devnet.rs:30`
 
 **Status: false positive.** The original audit's path-level trace was wrong.
 Re-verified on disk:
@@ -264,7 +264,7 @@ accepted.
 
 ## 6. MED — `publisher_signature` is a content id, not a real signature — RESOLVED FOR LOCAL DEVNET
 
-**Files**: `Deployed.toml:36` and `scripts/evolving_dob_devnet_workflow.py:270`
+**Files**: `Deployed.toml:36` and `tools/src/devnet.rs:270`
 
 The previous local workflow wrote a `"local-devnet-workflow:" + tx_hash`
 content identifier into `publisher_signature` and then required publisher
@@ -383,21 +383,23 @@ Unborn is a witness-only intent phase used at genesis but never persisted.
 
 ## 13. LOW — Inconsistent `cargo run` fallback between scripts — RESOLVED
 
-**File**: `scripts/evolving_dob_registry_pressure.py:28` vs
-`scripts/evolving_dob_devnet_workflow.py:64`
+**File**: `tools/src/main.rs:28` vs
+`tools/src/devnet.rs:64`
 
 The pressure script previously omitted `--bin cellc`:
 
-```python
-return ["cargo", "run", "--locked", "-p", "cellscript",
-        "--manifest-path", str(REPO_ROOT / "Cargo.toml"), "--"]
+```rust
+vec![
+    "cargo", "run", "--locked", "-p", "cellscript", "--bin", "cellc",
+    "--manifest-path", repo_root.join("Cargo.toml").to_str().unwrap(), "--",
+]
 ```
 
 The devnet script had the explicit `--bin cellc`. If `cellscript` is a
 workspace with multiple bins, the pressure script's `cargo run` will fail
 with "ambiguous which bin to run".
 
-**Resolution (2026-06-20)**: `evolving_dob_registry_pressure.py` now passes
+**Resolution (2026-06-20)**: `tools/src/main.rs` now passes
 `--bin cellc` in the fallback command. The exact argument order differs from
 the devnet script, but both commands select the same package, manifest, and
 binary.
@@ -406,7 +408,7 @@ binary.
 
 ## 14. LOW — `--keep-node` is brittle — RESOLVED
 
-**File**: `scripts/evolving_dob_devnet_workflow.py:351,501`
+**File**: `tools/src/devnet.rs:351,501`
 
 `subprocess.Popen([...], stdout=log, stderr=log, text=True)` does not pass
 `start_new_session=True`. When `--keep-node` is set, line 501 skips
@@ -423,7 +425,7 @@ shell process group surviving.
 
 ## 15. LOW — CKB log buffer not flushed on hang — RESOLVED
 
-**File**: `scripts/evolving_dob_devnet_workflow.py:350-351`
+**File**: `tools/src/devnet.rs:350-351`
 
 The log file is opened in text mode and `Popen` is given `text=True`. CKB's
 stdout is line-buffered in this configuration; a hung child with buffered
@@ -503,8 +505,8 @@ proposals/evolving-dob/evolving-dob-profile-v1/
 │   ├── evolving_dob_intent_v1.schema
 │   └── evolving_dob_state_v1.schema
 ├── scripts/
-│   ├── evolving_dob_devnet_workflow.py
-│   └── evolving_dob_registry_pressure.py
+│   ├── tools/src/devnet.rs
+│   └── tools/src/main.rs
 └── src/
     └── evolving_dob_type.cell
 ```

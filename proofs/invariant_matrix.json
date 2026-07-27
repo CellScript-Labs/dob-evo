@@ -60,7 +60,7 @@
     {
       "id": "registry_pressure",
       "claim": "The package is namespace-aware and must be published, source-hash checked, build-locked, and deployment-verified fail-closed before production use.",
-      "location": "Cell.toml namespace, registry.json, Cell.lock, scripts/evolving_dob_registry_pressure.py",
+      "location": "Cell.toml namespace, registry.json, Cell.lock, tools/src/main.rs",
       "coverage": "package-registry-gate-required"
     }
   ]

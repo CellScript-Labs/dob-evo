@@ -37,8 +37,8 @@ The important invariant is continuity. The profile preserves identity fields, ad
 | `fixtures/` | Positive and negative scenario labels for builders and VM harnesses. |
 | `proofs/` | Invariant matrix and proof-plan material. |
 | `docs/` | Profile, security, production-readiness, and registry-pressure notes. |
-| `scripts/evolving_dob_registry_pressure.py` | Local package and registry pressure check. |
-| `scripts/evolving_dob_devnet_workflow.py` | Local CKB devnet workflow for deployment and live registry evidence. |
+| `tools/src/main.rs` | Local package and registry pressure check. |
+| `tools/src/devnet.rs` | Local CKB devnet workflow for deployment and live registry evidence. |
 
 ## Quick Start
 
@@ -49,7 +49,7 @@ cellc build --release --target riscv64-elf --target-profile ckb
 cellc check --target-profile ckb --primitive-strict 0.16
 cellc package verify --json
 cellc publish --dry-run
-python3 scripts/evolving_dob_registry_pressure.py
+cargo run --quiet --locked --manifest-path tools/Cargo.toml -- registry-pressure
 ```
 
 These commands are intended to prove that the source package is internally coherent before you wire it into a registry or deployment process.
@@ -59,7 +59,7 @@ These commands are intended to prove that the source package is internally coher
 If you have a CKB checkout or `CKB_BIN` available, run:
 
 ```bash
-python3 scripts/evolving_dob_devnet_workflow.py --pretty
+cargo run --quiet --locked --manifest-path tools/Cargo.toml -- devnet-workflow --pretty
 ```
 
 That workflow starts a local integration node, deploys the built type script as a live code Cell, writes deployment metadata, verifies the registry identity including `--live`, emits action build plans, generates the TypeScript builder, and runs the generated builder tests.

@@ -8,7 +8,7 @@ cellc build --release --target riscv64-elf --target-profile ckb
 cellc check --target-profile ckb --primitive-strict 0.16
 cellc package verify --json
 cellc publish --dry-run
-python3 scripts/evolving_dob_registry_pressure.py
+cargo run --quiet --locked --manifest-path tools/Cargo.toml -- registry-pressure
 ```
 
 The manifest requires `production = true`, `deny_fail_closed = true`, and
@@ -19,7 +19,7 @@ verify inputs, outputs, lock hashes, and TYPE_ID lifecycle.
 Strict local CKB devnet workflow:
 
 ```bash
-python3 scripts/evolving_dob_devnet_workflow.py --pretty
+cargo run --quiet --locked --manifest-path tools/Cargo.toml -- devnet-workflow --pretty
 ```
 
 The devnet workflow deploys the compiled ELF into a local CKB integration node,

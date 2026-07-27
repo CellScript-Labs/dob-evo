@@ -16,7 +16,7 @@ The script also checks the local `registry.json` package identity when the
 registry file has been generated.
 
 Live workflow pressure is handled separately by
-`scripts/evolving_dob_devnet_workflow.py`. That gate starts a local CKB
+`tools/src/devnet.rs`. That gate starts a local CKB
 integration node, deploys the actual compiled ELF, records the resulting
 `Deployed.toml`, runs `registry verify --live`, generates the deployment-bound
 TypeScript builder, and runs the generated builder tests. This keeps the

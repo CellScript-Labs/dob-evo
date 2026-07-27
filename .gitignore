@@ -3,10 +3,7 @@
 .cell/
 target/
 build/
-__pycache__/
-*.py[cod]
 *.s
 *.elf
 *.wasm
 *.meta.json
-
