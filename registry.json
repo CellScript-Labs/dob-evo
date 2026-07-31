@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 1,
   "name": "evolving-dob-profile-v1",
   "namespace": "dob",
   "versions": [
